@@ -2603,6 +2603,8 @@ var require_ua_parser = __commonJS({
 // ../../pkgs/service/pkgs/service-web/pkgs/web-init/src/web/define-window.ts
 import React from "react";
 import JSXDevRuntime from "react/jsx-dev-runtime";
+import ReactDOMServer from "react-dom/server";
+import ReactDOM from "react-dom";
 import JSXRuntime from "react/jsx-runtime";
 
 // ../../pkgs/service/pkgs/service-web/pkgs/web-utils/src/use-local.ts
@@ -3160,6 +3162,8 @@ var defineWindow = async (baseurl) => {
   w7.css = u;
   w7.JSXRuntime = JSXRuntime;
   w7.JSXDevRuntime = JSXDevRuntime;
+  w7.ReactDOMServer = ReactDOMServer;
+  w7.ReactDOM = ReactDOM;
   w7.pathname = location2.pathname;
   w7.Fragment = React.Fragment;
   w7.cx = (...classNames) => {
@@ -4888,7 +4892,9 @@ var Root = ({ children }) => {
   );
 };
 export {
-  Prasi
+  Prasi,
+  useGlobal,
+  useLocal
 };
 /*! Bundled license information:
 

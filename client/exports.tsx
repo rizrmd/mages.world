@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+export { Connection } from "./components/Connection";
 
 export const assets = {};
 
