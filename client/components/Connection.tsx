@@ -7,12 +7,19 @@ export const Connection = () => {
   });
 
   if (!local.ws) {
+    local.status = "connecting";
     const connect = () => {
+      const shouldRender = !!local.ws;
       local.status = "connecting";
       local.ws = new WebSocket(`ws://localhost:3000`);
+      if (shouldRender) {
+        local.render();
+      }
       local.ws.onopen = () => {
         local.status = "connected";
-        local.render();
+        setTimeout(() => {
+          local.render();
+        });
       };
       local.ws.onclose = () => {
         local.status = "disconnected";
@@ -25,6 +32,7 @@ export const Connection = () => {
     };
     connect();
   }
+
   return (
     <div
       className={cx(
@@ -46,6 +54,9 @@ export const Connection = () => {
             background: yellow;
           `
       )}
+      onPointerDown={() => {
+        console.log("auoa");
+      }}
     ></div>
   );
 };

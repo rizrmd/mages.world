@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 export { Connection } from "./components/Connection";
+export { SpellSeq } from "./components/SpellSeq";
 
 export const assets = {};
 

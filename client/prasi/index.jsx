@@ -3966,6 +3966,9 @@ var RendererGlobal = {
   }
 };
 
+// src/compo/renderer/base/elements/script-exec.tsx
+import { Suspense as Suspense3 } from "react";
+
 // src/compo/page/component.ts
 var defaultComponent = {
   docs: {},
@@ -4232,41 +4235,91 @@ var findScope = (scope, itemID) => {
   return result;
 };
 
-// src/compo/renderer/base/elements/r-text.tsx
+// src/compo/renderer/base/elements/script-exec.tsx
 import { jsx as jsx13 } from "react/jsx-runtime";
+var scriptExec = (arg, api_url) => {
+  const adv = arg.item.adv;
+  if (adv && adv.jsBuilt) {
+    const output = { jsx: null };
+    let error = false;
+    try {
+      const evalArgs = produceEvalArgs({ ...arg, output }, api_url);
+      const scriptEval = new Function(...Object.keys(evalArgs), adv.jsBuilt);
+      scriptEval(...Object.values(evalArgs));
+    } catch (e2) {
+      error = true;
+      console.log(e2);
+    }
+    return output.jsx;
+  }
+  return null;
+};
+var produceEvalArgs = (arg, api_url) => {
+  const { item, rg, children, output, scope, className, render } = arg;
+  7;
+  if (!scope.evargs[item.id]) {
+    scope.evargs[item.id] = {
+      local: createLocal({ item, scope, render }),
+      passprop: createPassProps({ item, scope })
+    };
+  }
+  const PassProp = scope.evargs[item.id].passprop;
+  const Local = scope.evargs[item.id].local;
+  const result = {
+    PassProp,
+    Local,
+    children,
+    props: {
+      className: cx(className)
+    },
+    render: (jsx25) => {
+      output.jsx = /* @__PURE__ */ jsx13(ErrorBoundary, { children: /* @__PURE__ */ jsx13(
+        Suspense3,
+        {
+          fallback: /* @__PURE__ */ jsx13("div", { className: "flex flex-1 items-center justify-center w-full h-full relative", children: rg.ui.loading }),
+          children: jsx25
+        }
+      ) });
+    },
+    ...findScope(scope, item.id)
+  };
+  if (api_url) {
+    result["api"] = createAPI(api_url);
+    result["db"] = createDB(api_url);
+  }
+  return result;
+};
+
+// src/compo/renderer/base/elements/r-text.tsx
+import { jsx as jsx14 } from "react/jsx-runtime";
 var RText = ({ item }) => {
-  return /* @__PURE__ */ jsx13(RRender, { item, children: /* @__PURE__ */ jsx13(
+  return /* @__PURE__ */ jsx14(RRender, { item, children: /* @__PURE__ */ jsx14(
     "div",
     {
       dangerouslySetInnerHTML: {
         __html: item.html || ""
-      },
-      className: cx("outline-none select-text")
+      }
     }
   ) });
 };
 
 // src/compo/renderer/base/elements/r-component.tsx
-import { jsx as jsx14 } from "react/jsx-runtime";
-var RComponent = ({ item, comp }) => {
-  return /* @__PURE__ */ jsx14(RRender, { item: comp.content_tree, original: item, children: comp.content_tree.childs.map((e2) => {
-    if (e2.type === "item")
-      return /* @__PURE__ */ jsx14(RItem, { item: e2 }, e2.id);
-    else
-      return /* @__PURE__ */ jsx14(RText, { item: e2 }, e2.id);
-  }) });
-};
-
-// src/compo/renderer/base/elements/r-item.tsx
 import { jsx as jsx15 } from "react/jsx-runtime";
-var RItem = ({ item }) => {
+var RComponent = ({ item }) => {
   const rg = useGlobal(RendererGlobal, "PRASI_SITE");
-  const compid = item.component?.id;
-  if (compid) {
-    const comp = rg.component.def[compid];
-    if (comp) {
-      return /* @__PURE__ */ jsx15(RComponent, { item, comp });
+  const local = useLocal({ instanced: false });
+  if (!local.instanced) {
+    const scope = rg.scope;
+    for (const child of item.childs) {
+      scope.tree[child.id] = {
+        childs: /* @__PURE__ */ new Set(),
+        // name: item.name,
+        // type: item.type,
+        // lv: 0,
+        parent_id: item.id
+      };
     }
+    local.instanced = true;
   }
   return /* @__PURE__ */ jsx15(RRender, { item, children: item.childs.map((e2) => {
     if (e2.type === "item")
@@ -4276,8 +4329,27 @@ var RItem = ({ item }) => {
   }) });
 };
 
-// src/compo/renderer/base/elements/script-scope.tsx
+// src/compo/renderer/base/elements/r-item.tsx
 import { jsx as jsx16 } from "react/jsx-runtime";
+var RItem = ({ item }) => {
+  const rg = useGlobal(RendererGlobal, "PRASI_SITE");
+  const compid = item.component?.id;
+  if (compid) {
+    const comp = rg.component.def[compid];
+    if (comp) {
+      return /* @__PURE__ */ jsx16(RComponent, { item, comp });
+    }
+  }
+  return /* @__PURE__ */ jsx16(RRender, { item, children: item.childs.map((e2) => {
+    if (e2.type === "item")
+      return /* @__PURE__ */ jsx16(RItem, { item: e2 }, e2.id);
+    else
+      return /* @__PURE__ */ jsx16(RText, { item: e2 }, e2.id);
+  }) });
+};
+
+// src/compo/renderer/base/elements/script-scope.tsx
+import { jsx as jsx17 } from "react/jsx-runtime";
 var scriptScope = (item, rg) => {
   const i2 = item;
   let comp = null;
@@ -4334,7 +4406,7 @@ var scriptScope = (item, rg) => {
           if (v.meta?.type === "content-element") {
             const content = v.content;
             if (content) {
-              val = /* @__PURE__ */ jsx16(RItem, { item: content });
+              val = /* @__PURE__ */ jsx17(RItem, { item: content });
             } else {
               try {
                 val = exec(v.valueBuilt || v.value);
@@ -4355,76 +4427,20 @@ var scriptScope = (item, rg) => {
   return scope;
 };
 
-// src/compo/renderer/base/elements/script-exec.tsx
-import { Suspense as Suspense3 } from "react";
-import { jsx as jsx17 } from "react/jsx-runtime";
-var scriptExec = (arg, api_url) => {
-  const adv = arg.item.adv;
-  if (adv && adv.jsBuilt) {
-    const output = { jsx: null };
-    let error = false;
-    try {
-      const evalArgs = produceEvalArgs({ ...arg, output }, api_url);
-      const scriptEval = new Function(...Object.keys(evalArgs), adv.jsBuilt);
-      scriptEval(...Object.values(evalArgs));
-    } catch (e2) {
-      error = true;
-      console.log(e2);
-    }
-    return output.jsx;
-  }
-  return null;
-};
-var produceEvalArgs = (arg, api_url) => {
-  const { item, rg, children, output, scope, className, render } = arg;
-  7;
-  if (!scope.evargs[item.id]) {
-    scope.evargs[item.id] = {
-      local: createLocal({ item, scope, render }),
-      passprop: createPassProps({ item, scope })
-    };
-  }
-  const PassProp = scope.evargs[item.id].passprop;
-  const Local = scope.evargs[item.id].local;
-  const result = {
-    PassProp,
-    Local,
-    children,
-    props: {
-      className: cx(className)
-    },
-    render: (jsx25) => {
-      output.jsx = /* @__PURE__ */ jsx17(ErrorBoundary, { children: /* @__PURE__ */ jsx17(
-        Suspense3,
-        {
-          fallback: /* @__PURE__ */ jsx17("div", { className: "flex flex-1 items-center justify-center w-full h-full relative", children: rg.ui.loading }),
-          children: jsx25
-        }
-      ) });
-    },
-    ...findScope(scope, item.id)
-  };
-  if (api_url) {
-    result["api"] = createAPI(api_url);
-    result["db"] = createDB(api_url);
-  }
-  return result;
-};
-
 // src/compo/renderer/base/elements/r-render.tsx
 import { jsx as jsx18 } from "react/jsx-runtime";
-var RRender = ({ item: mitem, children, original }) => {
+var RRender = ({ item: mitem, children }) => {
   const rg = useGlobal(RendererGlobal, "PRASI_SITE");
   let _children = children;
   let item = mitem;
-  if (original) {
-    item = { ...mitem, id: original.id };
+  if (item.hidden === "all") {
+    return null;
   }
   const className = produceCSS(item, { mode: rg.mode });
   const adv = item.adv;
   if (adv) {
     const html = renderHTML2(adv);
-    const scope = scriptScope(original || item, rg);
+    const scope = scriptScope(item, rg);
     if (html)
       _children = html;
     else if (adv.jsBuilt && adv.js) {
@@ -4562,8 +4578,9 @@ var PrasiPage = (props) => {
         );
         try {
           fn(...Object.values(args), exports, types, dynamic_import_default, rg.render);
-          if (!scope.value.root)
-            scope.value.root = {};
+          if (!scope.value.root) {
+            scope.value.root = exports;
+          }
           for (const [k, v] of Object.entries(exports)) {
             scope.value.root[k] = v;
           }
@@ -4869,6 +4886,7 @@ var PrasiLive = ({ NotFound, Loading: Loading3, live, props }) => {
   if (typeof __SRV_URL__ === "undefined") {
     w6.__SRV_URL__ = "https://apilmtd.goperasi.id/";
     w6.siteApiUrl = __SRV_URL__;
+    w6.isEditor = false;
     defineWindow();
   }
   const site = createPrasiLive({ Loading: Loading3, NotFound, live, props });
