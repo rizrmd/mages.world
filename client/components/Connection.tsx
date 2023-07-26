@@ -11,7 +11,7 @@ export const Connection = () => {
     const connect = () => {
       const shouldRender = !!local.ws;
       local.status = "connecting";
-      local.ws = new WebSocket(`ws://localhost:3000`);
+      local.ws = new WebSocket(`ws://localhost:3000/ws`);
       if (shouldRender) {
         local.render();
       }

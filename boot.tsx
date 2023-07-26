@@ -2,8 +2,9 @@ import globalExternals from "@fal-works/esbuild-plugin-global-externals";
 import { watch } from "fs";
 import { readAsync, removeAsync, writeAsync } from "fs-jetpack";
 import { readdir } from "fs/promises";
-import { route } from "./server/boot";
+import { route } from "./server/route";
 import { wsRoute } from "./server/ws";
+import { g } from "./server/global";
 
 const buildReact = async () => {
   await removeAsync("build");

@@ -7,12 +7,12 @@ const PUBLIC_DIR = path.resolve(PROJECT_ROOT, "public");
 const BUILD_DIR = path.resolve(PROJECT_ROOT, "build");
 
 export const route = (req: Request, server: Server) => {
-  if (server.upgrade(req)) {
-    return; // do not return a Response
-  }
-
   let reqPath = new URL(req.url).pathname;
   if (reqPath === "/") reqPath = "/index.html";
+
+  if (reqPath === "/ws" && server.upgrade(req)) {
+    return; // do not return a Response
+  }
 
   // check public
   const publicResponse = serveFromDir({
